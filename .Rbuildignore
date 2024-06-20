@@ -1,0 +1,4 @@
+^renv$
+^renv\.lock$
+^fiveP\.Rproj$
+^\.Rproj\.user$
