@@ -1,95 +1,48 @@
 # main file. still to do
 
+#' Fetch and process data
+#'
+#' @param input_genes A vector of gene HGNC IDs
+#' @return A dataframe with the fiveP scores
+#' @export
+get_fiveP <- function(input_genes) { # eventually I can add options to save the intermediate files too
+  # place holder for data fetching functions
+  hgnc_gene_list <- fetch_hgnc_gene_list()
+  paralogues <- fetch_paralogues(hgnc_gene_list)
+  pathways <- fetch_pathways(hgnc_gene_list, input_genes)
+  ppi <- fetch_ppi(hgnc_gene_list)
+  uniprot <- fetch_uniprot(hgnc_gene_list, input_genes)
+  protein_complex <- fetch_protein_complex(hgnc_gene_list, uniprot)
+  protein_families <- fetch_protein_families(hgnc_gene_list, uniprot)
 
-# Read the input gene list. Choose which column in dataframe I need.
+  # place holder for data processing functions
+  paralogues_ratio <- calculate_paralogues_ratio(paralogues, input_genes)
+  pathways_ratio <- calculate_pathways_ratio(pathways$input_genes_Uniprot2Reactome,
+                                             pathways$Uniprot2Reactome_final_hgnc_no_na,
+                                             input_genes)
+  ppi_ratio <- calculate_ppi_ratio(ppi, input_genes)
+  protein_complex_ratio <- calculate_protein_complex_ratio(protein_complex, input_genes)
+  protein_families_ratio <- calculate_protein_families_ratio(protein_families, input_genes)
 
-# must be a df with a column called 'hgnc_id'
-read_input_genes <- function(df) {
-  df <- df %>%
+  # place holder for data merging and df output function
+  #merged_annotations <- merge_fiveP_ratios()
+
+  # Merging everything ---------------------------------------------------------
+  protein_coding_genes <- hgnc_gene_list %>%
     dplyr::select(hgnc_id)
-  save(df, file = "data/input_genes.RData")
-}
-
-
-# Run the data fetching scripts
-
-fetch_data <- function() {
-  script_paths <- c(
-    "R/hgnc_gene_list.R",
-    "R/uniprot.R",
-    "R/paralogues.R",
-    "R/pathways.R",
-    "R/ppi.R",
-    "R/protein_complex.R",
-    "R/protein_families.R"
-  )
-
-  for (script_path in script_paths) {
-    source(script_path)
-  }
-}
-
-
-#test <- fetch_data()
-
-# Run the count calculations
-
-create_scores <- function() {
-  script_paths <- c(
-    "R/paralogues_ratio.R",
-    "R/pathways_ratio.R",
-    "R/ppi_ratio.R",
-    "R/protein_complex_ratio.R",
-    "R/protein_families_ratio.R"
-  )
-
-  for (script_path in script_paths) {
-    source(script_path)
-  }
-}
-
-#test2 <- create_counts()
-
-# Merging all the data and creating the results file
-
-
-merge_counts <- function() {
-  # Protein coding genes
-  rdata_protein_coding_genes <- load('data/protein_coding_genes.RData')
-  protein_coding_genes <- get("protein_coding_genes") %>%
+  input_genes <- input_genes %>%
     dplyr::select(hgnc_id)
-
-  # Input genes
-  rdata_input_genes <- load('data/input_genes.RData')
-  input_genes <- get("input_genes") %>%
-    dplyr::select(hgnc_id)
-
-  # Protein Complex
-  rdata_protein_complexes <- load('data/complexportal_gene_counts.RData')
-  protein_complexes <- get("complexportal_gene_counts") %>%
+  protein_complexes <- protein_complex_ratio %>%
     dplyr::select(hgnc_id, ratio_input_genes_in_complexes)
-
-  # Protein Families
-  rdata_protein_families <- load('data/uniprot_pantherdb_gene_counts.RData')
-  protein_families <- get("uniprot_pantherdb_gene_counts") %>%
+  protein_families <- protein_families_ratio %>%
     dplyr::select(hgnc_id, ratio_input_genes_in_families)
-
-  # Pathways
-  rdata_pathways <- load('data/reactome_input_genes_pathways_gene_counts.RData')
-  pathways <- get("reactome_input_genes_pathways_gene_counts") %>%
+  pathways <- pathways_ratio %>%
     dplyr::select(hgnc_id, ratio_input_genes_in_pathways)
-
-  # Paralogues
-  rdata_paralogues <- load('data/biomart_paralogues_ratio.RData')
-  paralogues <- get("biomart_paralogues_ratio") %>%
+  paralogues <- paralogues_ratio %>%
     dplyr::select(hgnc_id, ratio_paraloginputgenes_to_paralogs)
-
-  # PPI
-  rdata_ppi <- load('data/string_interactions_ratio.RData')
-  ppi <- get("string_interactions_ratio") %>%
+  ppi <- ppi_ratio %>%
     dplyr::select(hgnc_id, ratio_interactioninputgenes_to_interactions)
 
-  # Merging everything
   list_of_dfs <- list(protein_coding_genes, protein_complexes, protein_families,
                       pathways, paralogues, ppi)
 
@@ -101,41 +54,29 @@ merge_counts <- function() {
     dplyr::rename(ppi_score = ratio_interactioninputgenes_to_interactions) %>%
     arrange(desc(protein_complex_score), desc(protein_family_score),
             desc(pathway_score), desc(paralogue_score), desc(ppi_score))
-  #print(results)
 
-  write.csv(results_with_previous_classes, file = 'results.csv')
+
+  # Comparing the results to our previous labels ---------------------------------
+
+#  previous_gene_classes <- data.frame(read_delim('./data/input/ndd_dataset_gene_classes.txt',
+ #                                                delim = '\t')) %>%
+#    dplyr::select(hgnc_id, ndd_ad_classes)
+#  print(previous_gene_classes)
+
+#  results_with_previous_classes <- results %>%
+ #   left_join(previous_gene_classes, by = 'hgnc_id')
+#  print(results_with_previous_classes)
+
+  # Removing duplicate rows
+ # results_with_previous_classes <- distinct(results_with_previous_classes)
+
+  # Saving the results -----------------------------------------------------------
+
+#  save_data_with_datetime('./data/results', 'protein_coding_genes_input_genes_5p_results',
+  #                        results_with_previous_classes)
+
+
+   return(results)
 }
-
-
-
-# Comparing the results to our previous labels ---------------------------------
-
-#previous_gene_classes <- data.frame(read_delim('./data/input/ndd_dataset_gene_classes.txt',
- #                                              delim = '\t')) %>%
-#  dplyr::select(hgnc_id, ndd_ad_classes)
-#print(previous_gene_classes)
-
-#results_with_previous_classes <- results %>%
- # left_join(previous_gene_classes, by = 'hgnc_id')
-#print(results_with_previous_classes)
-
-# Removing duplicate rows
-#results_with_previous_classes <- distinct(results_with_previous_classes)
-
-# Saving the results -----------------------------------------------------------
-
-#save_data_with_datetime('./data/results', 'protein_coding_genes_input_genes_5p_results',
- #                       results_with_previous_classes)
-
-
-
-
-
-# Run the plots?
-
-
-
-
-
 
 

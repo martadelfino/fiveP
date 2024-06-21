@@ -8,28 +8,41 @@ library("tidyverse")
 #if (!require("logr")) install.packages("logr")
 library("logr")
 
-# hgnc gene file ----------------------------------------------------------
+#' Fetch Data
+#'
+#' This function fetches data from Database for a given list of genes.
+#'
+#' @return A dataframe with data from Database.
+#' @export
+fetch_hgnc_gene_list <- function() {
+  # hgnc gene file ----------------------------------------------------------
 
-# If the file doesn't already exist, we will read it via FTP
-filename <- file.path("gene_with_protein_product.txt")
+  # If the file doesn't already exist, we will read it via FTP
+  filename <- file.path("gene_with_protein_product.txt")
 
-if (!file.exists(filename)) {
-  filename <- paste("ftp://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/locus_types",
-                    "gene_with_protein_product.txt",
-                    sep = "/")
+  if (!file.exists(filename)) {
+    filename <- paste("ftp://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/locus_types",
+                      "gene_with_protein_product.txt",
+                      sep = "/")
+  }
+
+  # filepath <- system.file("data", "gene_with_protein_product.txt", package = "your_package_name")
+
+  protein_coding_genes <- readr::read_delim(filename,
+                                            delim = "\t",
+                                            col_names = TRUE) %>%
+    as.data.frame()
+
+  print('finished running hgnc_gene_list.R')
+  return(protein_coding_genes)
+
 }
 
-# filepath <- system.file("data", "gene_with_protein_product.txt", package = "your_package_name")
-
-protein_coding_genes <- readr::read_delim(filename,
-                                          delim = "\t",
-                                          col_names = TRUE) %>%
-  as.data.frame()
 
 
 # Save file ------------------------------------------------------------------
 
-save(protein_coding_genes, file = "data/protein_coding_genes.RData")
+#save(protein_coding_genes, file = "data/protein_coding_genes.RData")
 
 #write.table(protein_coding_genes, "./data/protein_coding_genes.txt",
  #           quote = F, sep = "\t", row.names = F)
