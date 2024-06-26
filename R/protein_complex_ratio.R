@@ -86,7 +86,7 @@ calculate_protein_complex_ratio <- function(complexportal, input_genes) {
 
  # save(complexportal_counts_per_gene_final, file = "data/complexportal_gene_counts.RData")
 
-  print('finished running protein_complex_ratio.R')
+  cat('\n(11/12) finished running protein_complex_ratio.R\n')
   return(complexportal_counts_per_gene_final)
 
 }

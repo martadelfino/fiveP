@@ -41,7 +41,7 @@ fetch_ppi <- function(protein_coding_genes) {
   #string_db <- STRINGdb$new(version = "12.0", species = 9606,
   #                        score_threshold = 700, input_directory="")
 
-  string_db <- STRINGdb$new(version="12.0", species=9606,
+  string_db <- STRINGdb::STRINGdb$new(version="12.0", species=9606,
                             score_threshold=700, network_type="full",
                             input_directory="")
   class(string_db)
@@ -102,7 +102,7 @@ fetch_ppi <- function(protein_coding_genes) {
 
   #save(interactions_cleaned_hgnc, file = "data/string_interactions.RData")
 
-  print('finished running ppi.R')
+  cat('\n(4/12) finished running ppi.R\n')
   return(interactions_cleaned_hgnc)
 
 }

@@ -105,7 +105,7 @@ calculate_paralogues_ratio <- function(paralogues, input_genes) {
 #  save(paralogues_filtered_final,
  #      file = "data/biomart_paralogues_ratio.RData")
 
-  print('finished running paralogues_ratio.R')
+  cat('\n(8/12) finished running paralogues_ratio.R\n')
   return(paralogues_filtered_final)
 
 }

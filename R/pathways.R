@@ -179,7 +179,7 @@ fetch_pathways <- function(protein_coding_genes, input_genes) {
 
   #save(input_genes_Uniprot2Reactome, file = "data/reactome_gene_list_Uniprot2Reactome.RData")
 
-  print('finished running pathways.R')
+  cat('\n(3/12) finished running pathways.R\n')
   return(list(input_genes_Uniprot2Reactome = input_genes_Uniprot2Reactome,
               Uniprot2Reactome_final_hgnc_no_na = Uniprot2Reactome_final_hgnc_no_na))
 

@@ -64,10 +64,10 @@ fetch_protein_families <- function(protein_coding_genes,
                'gene_primary',
                'xref_panther',
                'version')
-  uniprot_input_gene_family_results <- query_uniprot(query,
-                                                     columns = columns,
-                                                     show_progress = TRUE,
-                                                     updateProgress = TRUE)
+  uniprot_input_gene_family_results <- queryup::query_uniprot(query,
+                                                              columns = columns,
+                                                              show_progress = TRUE,
+                                                              updateProgress = TRUE)
 
 #  head(uniprot_input_gene_family_results)
 
@@ -128,7 +128,7 @@ fetch_protein_families <- function(protein_coding_genes,
 
   #save(proteinfamily_genes_expanded, file = "data/uniprot_pantherdb_cleaned.RData")
 
-  print('finished running protein_families.R')
+  cat('\n(7/12) finished running protein_families.R\n')
   return(proteinfamily_genes_expanded)
 
   # Calculating how many families are input gene families from total families-----

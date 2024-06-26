@@ -97,7 +97,7 @@ calculate_ppi_ratio <- function(ppi, input_genes) {
 
  # save(ppi_ratio_final, file = "data/string_interactions_ratio.RData")
 
-  print('finished running ppi_ratio.R')
+  cat('\n(10/12) finished running ppi_ratio.R\n')
   return(ppi_ratio_final)
 
 }

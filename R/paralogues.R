@@ -78,7 +78,7 @@ fetch_paralogues <- function(protein_coding_genes) {
   #hsapiens_paralog_ds                            dS
 
 
-  human <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+  human <- biomaRt::useMart("ensembl", dataset = "hsapiens_gene_ensembl")
   paralogues <- biomaRt::getBM(attributes = c("ensembl_gene_id",
                                               "hsapiens_paralog_ensembl_gene",
                                               "hsapiens_paralog_orthology_type",
@@ -143,7 +143,7 @@ fetch_paralogues <- function(protein_coding_genes) {
 
   #save(paralogues_cleaned_reorg, file = "data/biomart_paralogues_cleaned.RData")
 
-  print('finished running paralogues.R')
+  cat('\n(2/12) finished running paralogues.R\n')
   return(paralogues_cleaned_reorg)
 }
 

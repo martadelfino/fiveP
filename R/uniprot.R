@@ -96,10 +96,10 @@ fetch_uniprot <- function(protein_coding_genes, input_genes) {
                "xref_complexportal",
                'xref_panther',
                'version')
-  uniprot_input_gene_symbol_results <- query_uniprot(query,
-                                                     columns = columns,
-                                                     show_progress = TRUE,
-                                                     updateProgress = TRUE)
+  uniprot_input_gene_symbol_results <- queryup::query_uniprot(query,
+                                                              columns = columns,
+                                                              show_progress = TRUE,
+                                                              updateProgress = TRUE)
 
   # Saving raw file --------------------------------------------------------------
 
@@ -135,18 +135,27 @@ fetch_uniprot <- function(protein_coding_genes, input_genes) {
                                    function(x) sum(grepl("HGNC:", x)) > 1))
 
   # View them
- # print(uniprot_input_gene_symbol_results[rows_to_separate,])
+  cat('print(uniprot_input_gene_symbol_results[rows_to_separate,])')
+  print(uniprot_input_gene_symbol_results[rows_to_separate,])
 
-  uniprot_input_gene_symbol_results_separated <- uniprot_input_gene_symbol_results %>%
-    slice(rows_to_separate) %>%
-    separate_rows(HGNC, sep = ";") %>%
-    mutate(HGNC = ifelse(grepl("HGNC:", HGNC), HGNC, paste0("HGNC:", HGNC)))
- # print(uniprot_input_gene_symbol_results_separated)
+  # Check if rows_to_separate is empty
+  if (length(rows_to_separate) > 0) {
+    uniprot_input_gene_symbol_results_separated <- uniprot_input_gene_symbol_results %>%
+      slice(rows_to_separate) %>%
+      separate_rows(HGNC, sep = ";") %>%
+      mutate(HGNC = ifelse(grepl("HGNC:", HGNC), HGNC, paste0("HGNC:", HGNC)))
+    cat('print(uniprot_input_gene_symbol_results_separated)')
+    print(uniprot_input_gene_symbol_results_separated)
 
-  # Combine the separated rows with the rest of the dataframe
-  uniprot_input_gene_symbol_results_combined <- bind_rows(uniprot_input_gene_symbol_results[-rows_to_separate, ],
-                                                          uniprot_input_gene_symbol_results_separated)
-#  head(uniprot_input_gene_symbol_results_combined)
+    # Combine the separated rows with the rest of the dataframe
+    uniprot_input_gene_symbol_results_combined <- bind_rows(uniprot_input_gene_symbol_results[-rows_to_separate, ],
+                                                            uniprot_input_gene_symbol_results_separated)
+    #  head(uniprot_input_gene_symbol_results_combined)
+
+  } else {
+    uniprot_input_gene_symbol_results_combined <- uniprot_input_gene_symbol_results
+  }
+
 
   # Checking duplicates
   sum(duplicated(uniprot_input_gene_symbol_results_combined$HGNC)) # 7 duplicates
@@ -219,10 +228,10 @@ fetch_uniprot <- function(protein_coding_genes, input_genes) {
                 "xref_complexportal",
                 'xref_panther',
                 'version')
-  uniprot_input_gene_symbol_results2 <- query_uniprot(query2,
-                                                      columns = columns,
-                                                      show_progress = TRUE,
-                                                      updateProgress = TRUE)
+  uniprot_input_gene_symbol_results2 <- queryup::query_uniprot(query2,
+                                                               columns = columns,
+                                                               show_progress = TRUE,
+                                                               updateProgress = TRUE)
 
 #  print(uniprot_input_gene_symbol_results2)
 
@@ -307,7 +316,7 @@ fetch_uniprot <- function(protein_coding_genes, input_genes) {
   #save(final_uniprot_input_genes_results,
    #    file = "data/uniprot_input_gene_symbol_results_cleaned.RData")
 
-  print('finished running uniprot.R')
+  cat('\n(5/12) finished running uniprot.R\n')
   return(final_uniprot_input_genes_results)
 }
 

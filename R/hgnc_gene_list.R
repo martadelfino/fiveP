@@ -17,23 +17,31 @@ library("logr")
 fetch_hgnc_gene_list <- function() {
   # hgnc gene file ----------------------------------------------------------
 
-  # If the file doesn't already exist, we will read it via FTP
-  filename <- file.path("gene_with_protein_product.txt")
 
-  if (!file.exists(filename)) {
-    filename <- paste("ftp://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/locus_types",
-                      "gene_with_protein_product.txt",
-                      sep = "/")
-  }
-
-  # filepath <- system.file("data", "gene_with_protein_product.txt", package = "your_package_name")
-
-  protein_coding_genes <- readr::read_delim(filename,
+  protein_coding_genes <- readr::read_delim("ftp://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/locus_types/gene_with_protein_product.txt",
                                             delim = "\t",
                                             col_names = TRUE) %>%
     as.data.frame()
 
-  print('finished running hgnc_gene_list.R')
+  # If the file doesn't already exist, we will read it via FTP
+  #filename <- file.path("gene_with_protein_product.txt")
+
+
+
+#  if (!file.exists(filename)) {
+ #   filename <- paste("ftp://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/locus_types",
+  #                    "gene_with_protein_product.txt",
+   #                   sep = "/")
+  #}
+
+  # filepath <- system.file("data", "gene_with_protein_product.txt", package = "your_package_name")
+
+ # protein_coding_genes <- readr::read_delim(filename,
+  #                                          delim = "\t",
+   #                                         col_names = TRUE) %>%
+    #as.data.frame()
+
+  cat('\n(1/12) finished running hgnc_gene_list.R\n')
   return(protein_coding_genes)
 
 }

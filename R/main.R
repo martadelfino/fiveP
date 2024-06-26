@@ -75,8 +75,8 @@ get_fiveP <- function(input_genes) { # eventually I can add options to save the 
 #  save_data_with_datetime('./data/results', 'protein_coding_genes_input_genes_5p_results',
   #                        results_with_previous_classes)
 
-
-   return(results)
+  cat("finished")
+  return(results)
 }
 
 

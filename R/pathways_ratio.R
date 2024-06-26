@@ -184,7 +184,7 @@ calculate_pathways_ratio <- function(input_genes_pathways, Uniprot2Reactome, inp
  # save(reactome_counts_per_gene_final,
   #     file = "data/reactome_input_genes_pathways_gene_counts.RData")
 
-  print('finished running pathways_ratio.R')
+  cat('\n(9/12) finished running pathways_ratio.R\n')
   return(reactome_counts_per_gene_final)
 
 }

@@ -136,7 +136,7 @@ fetch_protein_complex <- function(protein_coding_genes,
   #save(input_genes_complexportal_participants_hgnc,
    #    file = "data/complexportal_cleaned.RData")
 
-  print('finished running protein_complex.R')
+  cat('\n(6/12) finished running protein_complex.R\n')
   return(input_genes_complexportal_participants_hgnc)
 
   # Calculating how many complexes are input gene list complexes from the total complexes ----

@@ -82,7 +82,7 @@ calculate_protein_families_ratio <- function(panther, input_genes) {
 
 #  save(panther_counts_per_gene_final, file = "data/uniprot_pantherdb_gene_counts.RData")
 
-  print('finished running protein_families_ratio.R')
+  cat('\n(12/12) finished running protein_families_ratio.R\n')
   return(panther_counts_per_gene_final)
 
 
