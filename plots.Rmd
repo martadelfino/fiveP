@@ -1,0 +1,793 @@
+---
+title: "5 P's"
+output:
+  html_document: default
+date: "2024-03-01"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/data/WHRI-Phenogenomics/projects/Marta/5p/")
+getwd()
+```
+
+## Introduction
+
+This is an Rmarkdown document to summarize how the 5 P scores are calculated, and for data visualization.
+
+The 5 P's are:
+
+-   protein complex
+
+-   protein family
+
+-   pathways
+
+-   paralogues
+
+-   PPI
+
+The aim of creating a 'score' for each protein coding gene is to remove genes from the ML negative gene set that are similar to the positive set. Hopefully, improving the performance of the classifiers.
+
+## How the 5 P scores are calculated
+
+### Protein complexes, Protein families, Pathways
+
+For each gene, a score is calculated by looking only at complex/family/pathways with NDD genes. As an example, the calculation for the pathway score for each protein coding gene:
+
+( Number of unique NDD genes in the pathways of the gene that have an NDD gene) / ( Number of unique genes in the pathways that have an NDD gene)
+
+### Paralogues, PPI
+
+For each gene, a score is calculated by dividing the number of NDD genes by all genes in the paralogues/PPI. As an example, the calculation for the PPI score for each protein coding gene:
+
+( Number of NDD genes that gene interacts with ) / ( Number of genes it interacts with)
+
+#### Results
+
+The result is a score from 0 to 1 for each protein coding gene, for each 'P'. For the genes without data, a 'NA' is left in its place.
+
+## Data Visualisation
+
+Requirements
+
+```{r}
+library(ggplot2)
+
+library(gridExtra)
+
+library(tidyverse)
+
+source('./src/functions.R')
+```
+
+Upload results file
+
+```{r}
+results <- access_last_saved_file('./data/results', 'protein_coding_genes_input_genes_5p_results')
+
+columns_5p <- c('protein_complex_score', 'protein_family_score',
+                          'pathway_score', 'paralogue_score', 'ppi_score')
+
+results_zeros <- results %>%
+  mutate(across(all_of(columns_5p), ~coalesce(., 0)))
+
+```
+
+#### Barplot of number of genes we don't have 5 P data for and that are not intersecting with an NDD gene
+
+```{r}
+data_with_no_score <- results %>%
+  summarise_all(~ sum(is.na(.))) %>%
+  gather(key = "Variable", value = "Missing_Count")
+
+# Create a bar plot
+ggplot(data_with_no_score, aes(x = Variable, y = Missing_Count, fill = Variable)) +
+  geom_bar(stat = "identity", width = 0.7, position = "dodge") +
+  geom_text(aes(label = Missing_Count), vjust = -0.5, size = 3) +
+  theme_minimal() +
+  labs(title = "Number of Genes without 5 P data", 
+       x = "Variables", 
+       y = "Number of genes with no score") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_cartesian(ylim = c(0, 20000)) 
+```
+
+#### Density plot of 5 P scores
+
+```{r}
+# Create a list to store individual ggplot objects
+density_5ps <- lapply(columns_5p, function(column) {
+  ggplot(results, aes(x = results[[column]])) +
+    geom_density(fill = "skyblue", color = "darkblue", alpha = 0.7) +
+    labs(title = paste("Distribution of", column),
+         x = column, y = "Density") +
+    theme_minimal() +
+    coord_cartesian(ylim = c(0, 45)) 
+})
+
+# Arrange and display the plots
+grid.arrange(grobs = density_5ps, ncol = 2)
+
+# Create a list to store individual ggplot objects
+density_5ps_zeros <- lapply(columns_5p, function(column) {
+  ggplot(results_zeros, aes(x = results_zeros[[column]])) +
+    geom_density(fill = "skyblue", color = "darkblue", alpha = 0.7) +
+    labs(title = paste("Distribution of", column, '(no NAs)'),
+         x = column, y = "Density") +
+    theme_minimal() +
+    coord_cartesian(ylim = c(0, 45)) + 
+    theme(plot.title = element_text(size = 9))
+})
+
+# Arrange and display the plots
+grid.arrange(grobs = density_5ps_zeros, ncol = 2)
+
+
+#### Zoomed in 
+
+# Create a list to store individual ggplot objects
+density_5ps_zoomedin <- lapply(columns_5p, function(column) {
+  ggplot(results, aes(x = results[[column]])) +
+    geom_density(fill = "skyblue", color = "darkblue", alpha = 0.7) +
+    labs(title = paste("Distribution of", column),
+         x = column, y = "Density") +
+    theme_minimal() +
+    coord_cartesian(ylim = c(0, 5)) 
+})
+
+# Arrange and display the plots
+grid.arrange(grobs = density_5ps_zoomedin, ncol = 2)
+
+# Create a list to store individual ggplot objects
+density_5ps_zeros_zoomedin<- lapply(columns_5p, function(column) {
+  ggplot(results_zeros, aes(x = results_zeros[[column]])) +
+    geom_density(fill = "skyblue", color = "darkblue", alpha = 0.7) +
+    labs(title = paste("Distribution of", column, '(no NAs)'),
+         x = column, y = "Density") +
+    theme_minimal() +
+    coord_cartesian(ylim = c(0, 5)) + 
+    theme(plot.title = element_text(size = 9))
+})
+
+# Arrange and display the plots
+grid.arrange(grobs = density_5ps_zeros_zoomedin, ncol = 2)
+
+
+```
+
+Overlapped densities
+
+```{r}
+columns_to_plot <- columns_5p
+grouping_column <- "ndd_ad_classes"
+
+#### Overlapping densities 
+# reshaping data
+data_long <- tidyr::gather(results, key = "variable", value = "value", all_of(columns_to_plot))
+
+# Create a single plot with overlapped densities
+overlapped_plot <- ggplot(data_long, aes(x = value, fill = variable)) + 
+  geom_density(alpha = 0.3, show.legend = TRUE) +
+  labs(title = "Overlapped Densities for Each Column", x = "Value", y = "Density") +
+  theme_minimal() 
+
+print(overlapped_plot)
+
+overlapped_plot + coord_cartesian(ylim = c(0, 5)) + labs(title = "Zoomed-in Overlapped Densities for Each Column (with NAs)")
+
+
+#### Overlapping densities on results wihtout NAs 
+# reshaping data
+data_long_zeros <- tidyr::gather(results_zeros, key = "variable", value = "value", all_of(columns_to_plot))
+
+# Create a single plot with overlapped densities
+overlapped_plot_zeros <- ggplot(data_long_zeros, aes(x = value, fill = variable)) + 
+  geom_density(alpha = 0.3, show.legend = TRUE) +
+  labs(title = "Overlapped Densities for Each Column (no NAs)", x = "Value", y = "Density") +
+  theme_minimal() 
+
+print(overlapped_plot_zeros)
+
+overlapped_plot_zeros + coord_cartesian(ylim = c(0, 3)) + labs(title = "Zoomed-in Overlapped Densities for Each Column (no NAs)")
+
+
+```
+
+#### Distribution for each original ML gene set (positive set, negative set, unknown/unlabelled)
+
+```{r}
+# Specify the columns you want to plot
+columns_to_plot <- columns_5p
+grouping_column <- "ndd_ad_classes"
+
+# Create density plots using facets for each value in the grouping column
+plots <- lapply(columns_to_plot, function(column) {
+  ggplot(results, aes(x = .data[[column]], fill = .data[[grouping_column]])) +
+    geom_density(alpha = 0.7) +
+    labs(title = paste("Distribution of", column),
+         x = column, y = "Density") +
+    theme_minimal() +
+    facet_wrap(~.data[[grouping_column]], scales = "free_y") + 
+    coord_cartesian(ylim = c(0, 65))
+})
+
+# Print the plots
+print(plots)
+
+
+
+# overlapped, zoomed in 
+plots_overlapped <- lapply(columns_to_plot, function(column) {
+  ggplot(results, aes(x = .data[[column]], fill = .data[[grouping_column]])) +
+    geom_density(alpha = 0.3) +
+    labs(title = paste("Overlapped, zoomed in, Distribution of", column),
+         x = column, y = "Density") +
+    theme_minimal() +
+    coord_cartesian(ylim = c(0, 5))
+})
+
+# Print the plots
+print(plots_overlapped)
+
+```
+
+With the NAs filled in with 0s
+
+```{r}
+# Specify the columns you want to plot
+columns_to_plot <- columns_5p
+grouping_column <- "ndd_ad_classes"
+
+# Create density plots using facets for each value in the grouping column
+plots <- lapply(columns_to_plot, function(column) {
+  ggplot(results_zeros, aes(x = .data[[column]], fill = .data[[grouping_column]])) +
+    geom_density(alpha = 0.7) +
+    labs(title = paste("Distribution of", column),
+         x = column, y = "Density") +
+    theme_minimal() +
+    facet_wrap(~.data[[grouping_column]], scales = "free_y") + 
+    coord_cartesian(ylim = c(0, 65))
+})
+
+# Print the plots
+print(plots)
+
+# overlapped, zoomed in 
+plots_overlapped <- lapply(columns_to_plot, function(column) {
+  ggplot(results, aes(x = .data[[column]], fill = .data[[grouping_column]])) +
+    geom_density(alpha = 0.3) +
+    labs(title = paste("Overlapped, zoomed in, Distribution of", column, '(no NAs)'),
+         x = column, y = "Density") +
+    theme_minimal() +
+    coord_cartesian(ylim = c(0, 5))
+})
+
+# Print the plots
+print(plots_overlapped)
+```
+
+Distribution of the sum of all 5 P scores
+
+```{r}
+# Specify the columns you want to sum
+columns_to_sum <- columns_5p
+
+# Create a new variable representing the sum of the columns
+results$SumColumns <- rowSums(results[, columns_to_sum], na.rm = TRUE)
+
+# Create a density plot using facets for each value in the grouping column
+plot <- ggplot(results, aes(x = SumColumns, fill = .data[[grouping_column]])) +
+  geom_density(alpha = 0.7) +
+  labs(title = "Zoomed-in Distribution of the Sum of Columns",
+       x = "Sum of 5Ps", y = "Density") +
+  theme_minimal() +
+  facet_wrap(~.data[[grouping_column]], scales = "free_y") +
+    coord_cartesian(ylim = c(0, 65))
+
+# Print or view the plot
+print(plot)
+
+plot + coord_cartesian(ylim = c(0, 1.5))
+
+
+
+plot <- ggplot(results, aes(x = SumColumns, fill = .data[[grouping_column]])) +
+  geom_density(alpha = 0.3) +
+  labs(title = "Distribution of the Sum of Columns",
+       x = "Sum of 5Ps", y = "Density") +
+  theme_minimal() +
+    coord_cartesian(ylim = c(0, 10))
+
+# Print or view the plot
+print(plot)
+```
+
+Sum of filled in zeros
+
+```{r}
+# Specify the columns you want to sum
+columns_to_sum <- columns_5p
+
+# Create a new variable representing the sum of the columns
+results_zeros$SumColumns <- rowSums(results_zeros[, columns_to_sum], na.rm = TRUE)
+
+# Create a density plot using facets for each value in the grouping column
+plot <- ggplot(results_zeros, aes(x = SumColumns, fill = .data[[grouping_column]])) +
+  geom_density(alpha = 0.7) +
+  labs(title = "Distribution of the Sum of Columns",
+       x = "Sum of 5Ps", y = "Density") +
+  theme_minimal() +
+  facet_wrap(~.data[[grouping_column]], scales = "free_y") +
+  coord_cartesian(ylim = c(0, 65))
+
+# Print or view the plot
+print(plot)
+
+
+plot <- ggplot(results_zeros, aes(x = SumColumns, fill = .data[[grouping_column]])) +
+  geom_density(alpha = 0.7) +
+  labs(title = "Zoomed-in Distribution of the Sum of Columns",
+       x = "Sum of 5Ps", y = "Density") +
+  theme_minimal() +
+  facet_wrap(~.data[[grouping_column]], scales = "free_y") +
+  coord_cartesian(ylim = c(0, 2))
+
+# Print or view the plot
+print(plot)
+```
+
+Observations: Based on the plots, the sum doesn't seem to be a good indicator. Because the Positive set will have up to 3, but for the other sets, there are few/none with that score. However, maybe the plots are not the proper plots for what I'm trying to understand. It seems like looking at the 5 Ps separately makes more sense.
+
+### Summary Statistics of 5P's
+
+```{r}
+
+columns <- c('protein_complex_score', 'protein_family_score',
+                          'pathway_score', 'paralogue_score', 'ppi_score')
+
+summary_stats <- summary(results[, columns])
+
+print(summary_stats)
+
+# Do summary statistics for each gene set as well? doesn't work because of NAs
+
+#summary_stats_by_group <- results %>%
+#  group_by(ndd_ad_classes) %>%
+#  summarise_if(is.numeric, list(
+#    Mean = mean,
+#    SD = sd,
+#    Median = median,
+#    Min = min,
+#    Max = max))
+
+#print(summary_stats_by_group)
+
+```
+
+Number of genes in each ML set
+
+```{r}
+# Bar plot of number of genes in each ML set
+ggplot(results, aes(x = ndd_ad_classes, fill = ndd_ad_classes)) +
+  geom_bar(stat = "count", show.legend = FALSE) +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) + 
+  labs(title = "Number of Genes in each ML Set", 
+       x = "ML gene set", y = "Count") 
+
+```
+
+Using the mean to filter out genes
+
+```{r}
+# go throuh each column and take into account the genes that are above the mean for at least one P 
+
+results_means <- results %>%
+  dplyr::filter(protein_complex_score >= 259| 
+         protein_family_score >= 0.181 |
+         pathway_score >= 0.072 |
+         paralogue_score >= 0.033 |
+         ppi_score >= 0.056)
+
+print('Number of genes with these conditions:')
+nrow(results_means)
+
+# how many genes are in each gene 'set' with at least one P greater than its mean
+ggplot(results_means, aes(x = ndd_ad_classes, fill = ndd_ad_classes)) +
+  geom_bar(stat = "count", show.legend = FALSE) +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) + 
+  labs(title = "Number of Genes in each ML set with at least one P >= its mean (with NAs)", 
+       x = "ML gene set", y = "Count") +
+  theme(plot.title = element_text(size = 12))
+
+
+
+```
+
+```{r}
+# Summary stats of the Sum of the 5 Ps for each gene
+columns <- c('SumColumns')
+
+summary_stats <- summary(results[, columns])
+
+print(summary_stats)
+```
+
+Summary Statistics of the Results file without NAs (with 0s)
+
+```{r}
+# summary stats for results with filled in NAs
+columns <- c('protein_complex_score', 'protein_family_score',
+                          'pathway_score', 'paralogue_score', 'ppi_score')
+
+summary_stats <- summary(results_zeros[, columns])
+
+print(summary_stats)
+
+
+summary_stats_by_group <- results_zeros %>%
+  group_by(ndd_ad_classes) %>%
+  summarise_if(is.numeric, list(
+    Mean = mean,
+    SD = sd,
+    Median = median,
+    Min = min,
+    Max = max,
+    Q1 = function(x) quantile(x, 0.25),
+    Q3 = function(x) quantile(x, 0.75)
+    ))
+
+print(summary_stats_by_group)
+
+means <- summary_stats_by_group %>% 
+  as.data.frame() %>% 
+  dplyr::select(ndd_ad_classes, ends_with("Mean"))
+
+print(means)
+
+```
+
+Using the mean to filter out the genes
+
+```{r}
+results_zeros_means <- results_zeros %>%
+  dplyr::filter(protein_complex_score >= 0.007942 | 
+         protein_family_score >= 0.02139 |
+         pathway_score >= 0.02874 |
+         paralogue_score >= 0.01879 |
+         ppi_score >= 0.04066)
+
+#print(results_zeros_means)
+
+print('Number of genes with these conditions:')
+nrow(results_zeros_means)
+
+# how many genes are in each gene 'set' with at least one P greater than its mean
+ggplot(results_zeros_means, aes(x = ndd_ad_classes, fill = ndd_ad_classes)) +
+  geom_bar(stat = "count", show.legend = FALSE) +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) + 
+  labs(title = "Number of Genes in each ML set with at least one P >= mean (without NAs)",
+       x = "ML gene set", y = "Count") + 
+  theme(plot.title = element_text(size = 10))
+
+# creating stacked plot?
+
+# create side-by-side bar plot for all the gene sets, but in each gene set show how many genes in each P that are above that mean 
+```
+
+Means of the positive set
+
+```{r}
+results_zeros_means_positiveset <- results_zeros %>%
+  dplyr::filter(protein_complex_score >= 0.077393848 | 
+         protein_family_score >= 0.16114844 |
+         pathway_score >= 0.07807250 |
+         paralogue_score >= 0.15482577 |
+         ppi_score >= 0.14557152)
+
+#print(results_zeros_means)
+
+print('Number of genes with these conditions:')
+nrow(results_zeros_means_positiveset)
+
+# how many genes are in each gene 'set' with at least one P greater than its mean
+ggplot(results_zeros_means_positiveset, aes(x = ndd_ad_classes, fill = ndd_ad_classes)) +
+  geom_bar(stat = "count", show.legend = FALSE) +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) + 
+  labs(title = "Number of Genes in each ML set with at least one P >= positive set mean (without NAs)",
+       x = "ML gene set", y = "Count") + 
+  theme(plot.title = element_text(size = 9))
+
+```
+
+```{r}
+# Summary stats of the Sum 
+columns <- c('SumColumns')
+
+summary_stats <- summary(results_zeros[, columns])
+
+print(summary_stats)
+```
+
+### UpSet plot
+
+```{r}
+# make an upset plot that says how many of each category they are. so it would be how many genes have a score for the p that is greater than the mean, etc. 
+```
+
+### Turning the 5P ratios into a binary score
+
+```{r}
+
+# Turning the ratios into a binary score
+results_zeros_binary <- results_zeros %>%
+  dplyr::mutate(across(2:6, ~ifelse(. > 0, 1, .)))
+results_zeros_binary
+
+# Taking the sum of these binary scores
+results_zeros_binary_sum <- results_zeros_binary %>%
+  rowwise() %>%
+  dplyr::mutate(sum_5p_binary_scores = sum(c_across(2:6), na.rm = TRUE)) %>%
+  dplyr::select(!SumColumns) %>% dplyr::filter(ndd_ad_classes == 'positive')
+print(results_zeros_binary_sum)
+
+# Computing the mean of these binary scores
+results_zeros_binary_mean <- results_zeros_binary %>%
+  rowwise() %>%
+  dplyr::mutate(mean_5p_binary_scores = mean(c_across(2:6), na.rm = TRUE)) %>%
+  dplyr::select(!SumColumns)
+print(results_zeros_binary_mean)
+
+
+```
+
+Plotting how many genes have at least one P binary score \> 0
+
+```{r}
+
+results_zeros_binary_greaterthan0 <- results_zeros_binary %>%
+  dplyr::filter(protein_complex_score > 0 | 
+         protein_family_score > 0 |
+         pathway_score > 0 |
+         paralogue_score > 0 |
+         ppi_score > 0)
+
+#print(results_zeros_means)
+print('Number of genes with these conditions:')
+nrow(results_zeros_binary_greaterthan0)
+
+# how many genes are in each gene 'set' with at least one P greater than its mean
+ggplot(results_zeros_binary_greaterthan0, aes(x = ndd_ad_classes, fill = ndd_ad_classes)) +
+  geom_bar(stat = "count", show.legend = FALSE) +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) + 
+  labs(title = "Number of Genes in each ML set with at least one P binary score > 0",
+       x = "ML gene set", y = "Count") + 
+  theme(plot.title = element_text(size = 10))
+
+```
+
+Using the sum of the binary scores to plot how many genes are in each ML gene set
+
+```{r}
+
+results_zeros_binary$sum_of_binary_5p <- rowSums(results_zeros_binary[, 2:6], na.rm = TRUE)
+
+
+plot <- ggplot(results_zeros_binary, aes(x = sum_of_binary_5p, fill = .data[[grouping_column]])) +
+  geom_bar(alpha = 0.7) +
+  labs(title = "Barplots of the sum of binary 5Ps",
+       x = "Sum of 5Ps", y = "Density") +
+  theme_minimal() +
+  facet_wrap(~.data[[grouping_column]], scales = "free_y") +
+  coord_cartesian(ylim = c(0, 7500))
+print(plot)
+
+plot <- ggplot(results_zeros_binary, aes(x = sum_of_binary_5p, fill = .data[[grouping_column]])) +
+  geom_density(alpha = 0.7) +
+  labs(title = "Density of the sum of binary 5Ps",
+       x = "Sum of 5Ps", y = "Density") +
+  theme_minimal() +
+  facet_wrap(~.data[[grouping_column]], scales = "free_y") +
+  coord_cartesian(ylim = c(0, 2.5))
+print(plot)
+```
+
+With other score threshold
+
+```{r}
+results_zeros_binary_greaterthan0 <- results_zeros_binary %>%
+  dplyr::filter(sum_of_binary_5p > 0 )
+
+#print(results_zeros_means)
+print('Number of genes with these conditions:')
+nrow(results_zeros_binary_greaterthan0)
+
+ggplot(results_zeros_binary_greaterthan0, aes(x = ndd_ad_classes, fill = ndd_ad_classes)) +
+  geom_bar(stat = "count", show.legend = FALSE) +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) + 
+  labs(title = "Number of Genes in each ML set with binary P score summed > 0",
+       x = "ML gene set", y = "Count") + 
+  theme(plot.title = element_text(size = 10))
+
+
+
+
+results_zeros_binary_greaterthan1 <- results_zeros_binary %>%
+  dplyr::filter(sum_of_binary_5p > 1 )
+
+#print(results_zeros_means)
+print('Number of genes with these conditions:')
+nrow(results_zeros_binary_greaterthan1)
+
+ggplot(results_zeros_binary_greaterthan1, aes(x = ndd_ad_classes, fill = ndd_ad_classes)) +
+  geom_bar(stat = "count", show.legend = FALSE) +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) + 
+  labs(title = "Number of Genes in each ML set with binary P score summed > 1",
+       x = "ML gene set", y = "Count") + 
+  theme(plot.title = element_text(size = 10))
+
+
+
+results_zeros_binary_greaterthan2 <- results_zeros_binary %>%
+  dplyr::filter(sum_of_binary_5p > 2 )
+
+#print(results_zeros_means)
+print('Number of genes with these conditions:')
+nrow(results_zeros_binary_greaterthan2)
+
+ggplot(results_zeros_binary_greaterthan2, aes(x = ndd_ad_classes, fill = ndd_ad_classes)) +
+  geom_bar(stat = "count", show.legend = FALSE) +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) + 
+  labs(title = "Number of Genes in each ML set with binary P score summed > 2",
+       x = "ML gene set", y = "Count") + 
+  theme(plot.title = element_text(size = 10))
+
+results_zeros_binary_greaterthan3 <- results_zeros_binary %>%
+  dplyr::filter(sum_of_binary_5p > 3 )
+
+#print(results_zeros_means)
+print('Number of genes with these conditions:')
+nrow(results_zeros_binary_greaterthan3)
+
+ggplot(results_zeros_binary_greaterthan3, aes(x = ndd_ad_classes, fill = ndd_ad_classes)) +
+  geom_bar(stat = "count", show.legend = FALSE) +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) + 
+  labs(title = "Number of Genes in each ML set with binary P score summed > 3",
+       x = "ML gene set", y = "Count") + 
+  theme(plot.title = element_text(size = 10))
+
+
+
+results_zeros_binary_greaterthan4 <- results_zeros_binary %>%
+  dplyr::filter(sum_of_binary_5p > 4 )
+#print(results_zeros_means)
+print('Number of genes with these conditions:')
+nrow(results_zeros_binary_greaterthan4)
+
+ggplot(results_zeros_binary_greaterthan4, aes(x = ndd_ad_classes, fill = ndd_ad_classes)) +
+  geom_bar(stat = "count", show.legend = FALSE) +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, size = 3) + 
+  labs(title = "Number of Genes in each ML set with binary P score summed > 4",
+       x = "ML gene set", y = "Count") + 
+  theme(plot.title = element_text(size = 10))
+
+
+
+
+
+score_threshold_greaterthan_0 <- mutate(results_zeros_binary_greaterthan0, df_name = "> 0")
+score_threshold_greaterthan_1 <- mutate(results_zeros_binary_greaterthan1, df_name = "> 1")
+score_threshold_greaterthan_2 <- mutate(results_zeros_binary_greaterthan2, df_name = "> 2")
+score_threshold_greaterthan_3 <- mutate(results_zeros_binary_greaterthan3, df_name = "> 3")
+score_threshold_greaterthan_4 <- mutate(results_zeros_binary_greaterthan4, df_name = "> 4")
+control <- mutate(results, df_name = "_original dataset")
+
+# Combine all dataframes into one
+combined_df <- bind_rows(control, 
+                         score_threshold_greaterthan_0, 
+                         score_threshold_greaterthan_1, 
+                         score_threshold_greaterthan_2, 
+                         score_threshold_greaterthan_3, 
+                         score_threshold_greaterthan_4)
+
+# Group by the grouping column and df_name, then count rows for each combination
+counts <- combined_df %>%
+  group_by(ndd_ad_classes, df_name) %>%
+  summarise(count = n())
+
+
+ggplot(counts, aes(x = df_name, y = count, fill = ndd_ad_classes)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(aes(label = count), position = position_dodge(width = 0.9), vjust = -0.5, size = 2.5) +
+  labs(title = "Number of Genes in each ML set with binary P score sum at different thresholds",
+       x = "Thresholds", y = "Count") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1), 
+        plot.title = element_text(size = rel(0.9))) 
+```
+
+Using the mean of the binary scores to plot how many genes are in each ML gene set
+
+```{r}
+results_zeros_binary$mean_of_binary_5p <- rowMeans(results_zeros_binary[, 2:6], na.rm = TRUE)
+
+
+plot <- ggplot(results_zeros_binary, aes(x = mean_of_binary_5p, fill = .data[[grouping_column]])) +
+  geom_bar(alpha = 0.7) +
+  labs(title = "Barplots of the mean of binary 5Ps",
+       x = "Sum of 5Ps", y = "Density") +
+  theme_minimal() +
+  facet_wrap(~.data[[grouping_column]], scales = "free_y") +
+  coord_cartesian(ylim = c(0, 7500))
+print(plot)
+
+plot <- ggplot(results_zeros_binary, aes(x = mean_of_binary_5p, fill = .data[[grouping_column]])) +
+  geom_density(alpha = 0.7) +
+  labs(title = "Density of the mean of binary 5Ps",
+       x = "Sum of 5Ps", y = "Density") +
+  theme_minimal() +
+  facet_wrap(~.data[[grouping_column]], scales = "free_y") +
+  coord_cartesian(ylim = c(0, 12))
+print(plot)
+
+
+
+
+results_zeros_binary_greaterthan0mean <- results_zeros_binary %>%
+  dplyr::filter(mean_of_binary_5p > 0)
+results_zeros_binary_greaterthan01 <- results_zeros_binary %>%
+  dplyr::filter(mean_of_binary_5p > 0.1 )
+results_zeros_binary_greaterthan02 <- results_zeros_binary %>%
+  dplyr::filter(mean_of_binary_5p > 0.2 )
+results_zeros_binary_greaterthan03 <- results_zeros_binary %>%
+  dplyr::filter(mean_of_binary_5p > 0.3 )
+results_zeros_binary_greaterthan04 <- results_zeros_binary %>%
+  dplyr::filter(mean_of_binary_5p > 0.4 )
+results_zeros_binary_greaterthan05 <- results_zeros_binary %>%
+  dplyr::filter(mean_of_binary_5p > 0.5 )
+results_zeros_binary_greaterthan06 <- results_zeros_binary %>%
+  dplyr::filter(mean_of_binary_5p > 0.6 )
+results_zeros_binary_greaterthan07 <- results_zeros_binary %>%
+  dplyr::filter(mean_of_binary_5p > 0.7 )
+results_zeros_binary_greaterthan08 <- results_zeros_binary %>%
+  dplyr::filter(mean_of_binary_5p > 0.8 )
+results_zeros_binary_greaterthan09 <- results_zeros_binary %>%
+  dplyr::filter(mean_of_binary_5p > 0.9 )
+
+
+score_threshold_greaterthan_0 <- mutate(results_zeros_binary_greaterthan0mean, df_name = "> 0")
+score_threshold_greaterthan_01 <- mutate(results_zeros_binary_greaterthan01, df_name = "> 0.1")
+score_threshold_greaterthan_02 <- mutate(results_zeros_binary_greaterthan02, df_name = "> 0.2")
+score_threshold_greaterthan_03 <- mutate(results_zeros_binary_greaterthan03, df_name = "> 0.3")
+score_threshold_greaterthan_04 <- mutate(results_zeros_binary_greaterthan04, df_name = "> 0.4")
+score_threshold_greaterthan_05 <- mutate(results_zeros_binary_greaterthan05, df_name = "> 0.5")
+score_threshold_greaterthan_06 <- mutate(results_zeros_binary_greaterthan06, df_name = "> 0.6")
+score_threshold_greaterthan_07 <- mutate(results_zeros_binary_greaterthan07, df_name = "> 0.7")
+score_threshold_greaterthan_08 <- mutate(results_zeros_binary_greaterthan08, df_name = "> 0.8")
+score_threshold_greaterthan_09 <- mutate(results_zeros_binary_greaterthan09, df_name = "> 0.9")
+control <- mutate(results, df_name = "_original dataset")
+
+# Combine all dataframes into one
+combined_df <- bind_rows(control, 
+                         score_threshold_greaterthan_0, #score_threshold_greaterthan_01,
+                         score_threshold_greaterthan_02, #score_threshold_greaterthan_03, #score_threshold_greaterthan_04, 
+                         score_threshold_greaterthan_05, 
+                         score_threshold_greaterthan_06, #score_threshold_greaterthan_07,
+                         score_threshold_greaterthan_08) #score_threshold_greaterthan_09)
+
+# Group by the grouping column and df_name, then count rows for each combination
+counts <- combined_df %>%
+  group_by(ndd_ad_classes, df_name) %>%
+  summarise(count = n())
+
+
+ggplot(counts, aes(x = df_name, y = count, fill = ndd_ad_classes)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(aes(label = count), position = position_dodge(width = 0.9), vjust = -0.5, size = 2.5) +
+  labs(title = "Number of Genes in each ML set with binary P score mean at different thresholds",
+       x = "Thresholds", y = "Count") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1), 
+        plot.title = element_text(size = rel(0.9))) 
+```
+
+hosting this file?
+
+<https://mbounthavong.com/blog/2022/7/30/hosting-a-r-markdown-html-file-on-a-github-page>
