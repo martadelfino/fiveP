@@ -2,7 +2,7 @@
 % Please edit documentation in R/protein_complex.R
 \name{fetch_protein_complex}
 \alias{fetch_protein_complex}
-\title{Fetch Data}
+\title{Fetch Protein Complex Data from Complex Portal}
 \usage{
 fetch_protein_complex(
   protein_coding_genes,
@@ -15,8 +15,8 @@ fetch_protein_complex(
 \item{uniprot_input_gene_symbol_results_cleaned}{The df of uniprot results of input genes.}
 }
 \value{
-A dataframe with data from Database.
+A dataframe with Protein Complex data of the input genes from Complex Portal Database.
 }
 \description{
-This function fetches data from Database for a given list of genes.
+This function fetches data from Complex Portal Database for all pc coding genes.
 }

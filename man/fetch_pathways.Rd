@@ -2,7 +2,7 @@
 % Please edit documentation in R/pathways.R
 \name{fetch_pathways}
 \alias{fetch_pathways}
-\title{Fetch Data}
+\title{Fetch Pathway Data}
 \usage{
 fetch_pathways(protein_coding_genes, input_genes)
 }
@@ -12,8 +12,8 @@ fetch_pathways(protein_coding_genes, input_genes)
 \item{input_genes}{The df of input genes.}
 }
 \value{
-A list of two dataframes with data from Database.
+A list of two dataframes with pathway data from Reactome 1. input genes pathway data, 2. All protein coding genes pathway data
 }
 \description{
-This function fetches data from Database for a given list of genes.
+This function fetches pathway data from Reactome for all protein coding genes and input genes.
 }

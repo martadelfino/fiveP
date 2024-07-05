@@ -2,7 +2,7 @@
 % Please edit documentation in R/paralogues.R
 \name{fetch_paralogues}
 \alias{fetch_paralogues}
-\title{Fetch Data}
+\title{Fetch Paralogues Data}
 \usage{
 fetch_paralogues(protein_coding_genes)
 }
@@ -10,8 +10,8 @@ fetch_paralogues(protein_coding_genes)
 \item{protein_coding_genes}{The df of all protein coding genes.}
 }
 \value{
-A dataframe with data from Database.
+A dataframe with paralogues data from Ensembl.
 }
 \description{
-This function fetches data from Database for a given list of genes.
+This function fetches paralogues data from Ensembl for all protein coding genes.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/uniprot.R
 \name{fetch_uniprot}
 \alias{fetch_uniprot}
-\title{Fetch Data}
+\title{Fetch Uniprot Data}
 \usage{
 fetch_uniprot(protein_coding_genes, input_genes)
 }
@@ -12,8 +12,8 @@ fetch_uniprot(protein_coding_genes, input_genes)
 \item{input_genes}{The df of input genes.}
 }
 \value{
-A dataframe with data from Database.
+A dataframe with Uniprot data of the input genes.
 }
 \description{
-This function fetches data from Database for a given list of genes.
+This function fetches protein data from Uniprot for all protein coding genes_______?.
 }

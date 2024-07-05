@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{get_fiveP}
 \alias{get_fiveP}
-\title{Fetch and process data}
+\title{Main function for obtaining fiveP scores for the input genes}
 \usage{
 get_fiveP(input_genes)
 }
@@ -13,5 +13,5 @@ get_fiveP(input_genes)
 A dataframe with the fiveP scores
 }
 \description{
-Fetch and process data
+Main function for obtaining fiveP scores for the input genes
 }

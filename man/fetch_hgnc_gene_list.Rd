@@ -2,13 +2,13 @@
 % Please edit documentation in R/hgnc_gene_list.R
 \name{fetch_hgnc_gene_list}
 \alias{fetch_hgnc_gene_list}
-\title{Fetch Data}
+\title{Fetch all protein coding genes data}
 \usage{
 fetch_hgnc_gene_list()
 }
 \value{
-A dataframe with data from Database.
+A dataframe with protein coding gene data from EBI database.
 }
 \description{
-This function fetches data from Database for a given list of genes.
+This function fetches data from EBI to get all protein coding genes.
 }

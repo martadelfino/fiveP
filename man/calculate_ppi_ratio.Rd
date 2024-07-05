@@ -7,12 +7,12 @@
 calculate_ppi_ratio(ppi, input_genes)
 }
 \arguments{
-\item{ppi}{A df of ppi annotations}
+\item{ppi}{A df of ppi annotations for all protein coding genes}
 
 \item{input_genes}{A df of input genes}
 }
 \value{
-A dataframe with the fiveP scores
+A dataframe with HGNC IDs and PPI scores
 }
 \description{
 Calculate ratio for PPI

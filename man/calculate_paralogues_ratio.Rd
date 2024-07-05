@@ -7,12 +7,12 @@
 calculate_paralogues_ratio(paralogues, input_genes)
 }
 \arguments{
-\item{paralogues}{A df of paralogue annotations}
+\item{paralogues}{A df of paralogue annotations for all protein coding genes}
 
 \item{input_genes}{A vector of input genes}
 }
 \value{
-A dataframe with the fiveP scores
+A dataframe with HGNC IDs and paralogue score
 }
 \description{
 Calculate ratio for Paralogues

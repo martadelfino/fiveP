@@ -2,7 +2,7 @@
 % Please edit documentation in R/ppi.R
 \name{fetch_ppi}
 \alias{fetch_ppi}
-\title{Fetch Data}
+\title{Fetch PPI Data}
 \usage{
 fetch_ppi(protein_coding_genes)
 }
@@ -13,5 +13,5 @@ fetch_ppi(protein_coding_genes)
 A dataframe with data from Database.
 }
 \description{
-This function fetches data from Database for a given list of genes.
+This function fetches PPI data from STRING for all protein coding genes.
 }

@@ -9,12 +9,12 @@ calculate_pathways_ratio(input_genes_pathways, Uniprot2Reactome, input_genes)
 \arguments{
 \item{input_genes_pathways}{A df of pathway annotations based on input genes}
 
-\item{Uniprot2Reactome}{A df of all pathway annotations}
+\item{Uniprot2Reactome}{A df of pathway annotations of all protein coding genes}
 
 \item{input_genes}{A df of input genes}
 }
 \value{
-A dataframe with the fiveP scores
+A dataframe with HGNC IDs and pathway score
 }
 \description{
 Calculate ratio for Pathways

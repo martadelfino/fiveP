@@ -2,7 +2,7 @@
 % Please edit documentation in R/protein_families.R
 \name{fetch_protein_families}
 \alias{fetch_protein_families}
-\title{Fetch Data}
+\title{Fetch Protein Family Data from Uniprot}
 \usage{
 fetch_protein_families(
   protein_coding_genes,
@@ -15,8 +15,8 @@ fetch_protein_families(
 \item{uniprot_input_gene_symbol_results_cleaned}{The df of uniprot results of input genes.}
 }
 \value{
-A dataframe with data from Database.
+A dataframe with Protein Family data from Uniprot for the input genes.
 }
 \description{
-This function fetches data from Database for a given list of genes.
+This function fetches protein family data from Uniprot for the input genes.
 }
