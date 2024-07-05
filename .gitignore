@@ -8,3 +8,4 @@ renv/sandbox/
 .DS_Store
 data/
 biallelic.Rmd
+plots.Rmd

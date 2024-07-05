@@ -4,15 +4,17 @@
 
 The main function, `get_fiveP(input_genes)`, takes a df of HGNC IDs. The function outputs a dataframe with HGNC IDs for all protein coding genes, with five columns (paralogues, pathways, PPI, protein complexes, protein families) of scores. The scores are calculated based on how similar each protein coding gene is to the input genes provided by the user.
 
-## Installation 
+## Installation
 
 ```{r}
-install.packages("devtools")
+if (!requireNamespace("devtools", quietly = TRUE)) {
+    install.packages("devtools")
+}
 
 devtools::install_github("martadelfino/fiveP")
 ```
 
-## Usage 
+## Usage
 
 Example
 
@@ -32,10 +34,10 @@ head(result)
 
 -   More examples in `biallelic.Rmd`
 
-## Features 
+## Features
 
 -   Main function: `get_fiveP()`
 
-## Documentation 
+## Documentation
 
 -   Roxygen docs in `man/`
